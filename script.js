@@ -3,17 +3,21 @@ const text = document.querySelector('#text');
 const pen = paper.getContext('2d');
 let startTime = new Date().getTime();
 let soundEnabled = false;
-document.onvisibilitychange = () => soundEnabled = false;
+document.onvisibilitychange = () => {
+    soundEnabled = false;
+    changeText();
+}
 paper.addEventListener('click', () => {
     soundEnabled = !soundEnabled;
-
-    if (soundEnabled) {
-        text.textContent = "Click to disable sound";
-    } else {
-        text.textContent = "Click to enable sound"
-    }
+    changeText()
 })
-
+function changeText() {
+    if (soundEnabled) {
+        text.innerHTML = 'Click to <span class="red">disable</span> sound';
+    } else {
+        text.innerHTML = 'Click to <span class="green">enable</span> sound'
+    }
+}
 
 const oneFullLoop = 2 * Math.PI;
 const realignAfterSeconds = 900;
@@ -120,7 +124,7 @@ function draw() {
         pen.arc(x, y, length * 0.0065, 0, 2 * Math.PI);
         pen.fill();
 
-        if (currentTime >= arc.nextImpactTime) {
+        if (currentTime >= arc.nextImpactTime + 10) {
             if(soundEnabled) {
                 arc.audio.play();
             }

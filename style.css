@@ -70,6 +70,16 @@ body {
     align-items: center;
 }
 
+.green{
+    color: green;
+    font-weight: bold;
+}
+
+.red {
+    color: red;
+    font-weight: bold;
+}
+
 #paper {
     width: 100vw;
     height: 95vh;
