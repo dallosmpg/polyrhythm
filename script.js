@@ -1,6 +1,26 @@
 const paper = document.querySelector('#paper');
+const text = document.querySelector('#text');
 const pen = paper.getContext('2d');
 let startTime = new Date().getTime();
+let soundEnabled = false;
+document.onvisibilitychange = () => soundEnabled = false;
+paper.addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+
+    if (soundEnabled) {
+        text.textContent = "Click to disable sound";
+    } else {
+        text.textContent = "Click to enable sound"
+    }
+})
+
+
+const oneFullLoop = 2 * Math.PI;
+const realignAfterSeconds = 900;
+
+function calculateNextImpactTime(currentImpactTime, velocity) {
+    return currentImpactTime + Math.PI / velocity * 1000;
+}   
 
 const arcs = [
           "#D0E7F5",
@@ -23,8 +43,21 @@ const arcs = [
           "#FFB6C1",
           "#FED2CF",
           "#FDDFD5",
-          "#FEDCD1"
-]
+].map((color, index) => {
+    const audio = new Audio(`./sounds/Untitled song(${index}).mp3`);
+    audio.volume = 0.05;
+
+    const numberOfLoops = 50 - index;
+    const velocity = (oneFullLoop * numberOfLoops) / realignAfterSeconds; 
+
+
+    return {
+        color,
+        audio,
+        nextImpactTime: calculateNextImpactTime(startTime, velocity),
+        velocity
+    }
+})
 
 function draw() {
     paper.width = paper.clientWidth;
@@ -69,28 +102,30 @@ function draw() {
 
     arcs.forEach((arc, index) => {
         const arcRadius = initialArcRadius + (index * spacing);
-
-        const realignAfterSeconds = 300;
-        const oneFullLoop = 2 * Math.PI;
-        const numberOfLoops = 50 - index;
-        const velocity = (oneFullLoop * numberOfLoops) / realignAfterSeconds; 
-        const distance = Math.PI + (elapsedTime * velocity);
+        
+        const distance = Math.PI + (elapsedTime * arc.velocity);
         const modDistance = distance % maxAngle;
         const adjustedDistance = modDistance >= Math.PI ? modDistance : maxAngle - modDistance;
-
 
         const x = center.x + arcRadius * Math.cos(adjustedDistance);
         const y = center.y + arcRadius * Math.sin(adjustedDistance);
     
         pen.beginPath();
-        pen.strokeStyle = arc;
+        pen.strokeStyle = arc.color;
         pen.arc(center.x, center.y, arcRadius, Math.PI, 2 * Math.PI);
         pen.stroke();
     
         pen.fillStyle = 'white';
         pen.beginPath();
         pen.arc(x, y, length * 0.0065, 0, 2 * Math.PI);
-        pen.fill();     
+        pen.fill();
+
+        if (currentTime >= arc.nextImpactTime) {
+            if(soundEnabled) {
+                arc.audio.play();
+            }
+            arc.nextImpactTime = calculateNextImpactTime(arc.nextImpactTime, arc.velocity);
+        } 
     })
     
     requestAnimationFrame(draw)
